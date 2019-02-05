@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<!--
+Fabio Sedki
+game finished on 14/ 01/2016
+The game is a dodge ball game, score is based off of time. Don't run into the balls.
+-->
+<html>
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <style>
+            canvas {
+                padding-left: 0;
+                padding-right: 0;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+                width: 800px;
+                background-color: black;
+            }
+
+
+
+
+
+        </style>
+    </head>
+    <body>
+        <div>
+
+
+
+        </div>
+        <canvas id="canvas" width="800" height="600" style="border:10px whitesmoke" tabindex="1">
+
+            <script>
+
+
+
+
+
+                //screen
+                var ctx;
+                var WIDTH;
+                var HEIGHT;
+                //player 1
+                var player1X;
+                var player1Y;
+                var player1H;
+                var player1W;
+                //key presses
+                var p1Up = false;
+                var p1Down = false;
+                var p1Left = false;
+                var p1Right = false;
+                var resetPressed = false;
+
+                var gamePaused = true;
+                //ball
+
+                var x;
+                var y;
+                var dx;
+                var dy;
+                var rad = 20;
+                //ball 2
+                var x2;
+                var y2;
+                var dx2;
+                var dy2;
+                //ball 3
+                var x3;
+                var y3;
+                var dx3;
+                var dy3;
+                //score stuff
+                var startTime;
+                var elapsedTime;
+                var score = 0;
+
+                //what the game initially loads
+                function init() {
+                    ctx = document.getElementById('canvas').getContext('2d');
+
+
+                    WIDTH = ctx.canvas.width;
+                    HEIGHT = ctx.canvas.height;
+
+                    init_player();
+                    startValues();
+                    requestAnimationFrame(draw);
+
+                }
+                function startValues() {
+                    x = 100; //set the values for the ball and player to restart the game
+                    y = 200;
+                    dx = 8;
+                    dy = 8;
+
+                    x3 = 600; //x value
+                    y3 = 200; //y value
+                    dx3 = -8; //direction of ball is x
+                    dy3 = 8; //direction of ball in y
+
+
+                    x2 = 500;
+                    y2 = 500;
+                    dx2 = -8;
+                    dy2 = -8;
+                    //player
+                    init_player();
+                }
+
+                function init_player() {
+
+                    player1W = 25;
+                    player1H = 50;
+                    player1X = WIDTH / 2;
+                    player1Y = HEIGHT / 2;
+
+                }
+
+                function circle(x, y, r) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2, true);
+
+                    //ctx.arc(x2, y2, r, 0, Math.PI * 2, true);
+                    //ctx.arc(x3, y3, r, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fill();
+
+                }
+
+
+
+
+                function rect(x, y, w, h) {
+                    ctx.beginPath();
+                    ctx.rect(x, y, w, h);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                function clear() {
+                    ctx.fillStyle = "#000000";
+                    rect(0, 0, WIDTH, HEIGHT);
+                }
+
+                //Key code 38 = Up key
+                //Key Code 40 = Down key
+                //Key code 37 = left key
+                //key code 39 = right key
+                //key code 32 = space bar
+                function onKeyDown(evt) {
+                    if (evt.keyCode === 38) {
+                        p1Up = true;
+
+                    } else if (evt.keyCode === 40) {
+                        p1Down = true;
+
+                    }
+                    if (evt.keyCode === 37) {
+                        p1Left = true;
+
+                    } else if (evt.keyCode === 39) {
+                        p1Right = true;
+
+                    }
+
+                    if (evt.keyCode === 32)
+                        resetPressed = true;
+                }
+
+                function onKeyUp(evt) {
+                    if (evt.keyCode === 38) {
+                        p1Up = false;
+
+                    } else if (evt.keyCode === 40) {
+                        p1Down = false;
+
+                    }
+                    if (evt.keyCode === 37) {
+                        p1Left = false;
+
+                    } else if (evt.keyCode === 39) {
+                        p1Right = false;
+
+                    }
+
+                    if (evt.keyCode === 32)
+                        resetPressed = false; //if game is paused, unpause the game
+                }
+
+
+                function moveplayer() {
+                    //move the player using pixels
+                    if (p1Up && player1Y > 0)
+                        player1Y -= 5;
+                    else if (p1Down && (player1Y + player1H) < HEIGHT)
+                        player1Y += 5;
+
+                    if (p1Left && player1X > 0)
+                        player1X -= 5;
+                    else if (p1Right && (player1X + player1W) < WIDTH)
+                        player1X += 5;
+
+                }
+
+
+
+                function drawPlayer() {
+                    ctx.fillStyle = "#FFFFFF"; //white
+
+                    rect(player1X, player1Y, player1W, player1H);
+
+
+                }
+                function checkBallBounce() {
+                    //if the ball touches a wall change the direction
+                    if (x < rad || x > 800 - rad)
+                        dx = -dx;
+                    if (y < rad || y > 600 - rad)
+                        dy = -dy;
+                    if (x2 < rad || x2 > 800 - rad)
+                        dx2 = -dx2;
+                    if (y2 < rad || y2 > 600 - rad)
+                        dy2 = -dy2;
+
+                    if (x3 < rad || x3 > 800 - rad)
+                        dx3 = -dx3;
+                    if (y3 < rad || y3 > 600 - rad)
+                        dy3 = -dy3;
+
+
+                }
+                function updateBall() {
+                    //update the position of the ball
+
+                    if (gamePaused) {
+                        //only draw ball if game is paused
+                        ctx.fillStyle = "#0000ff";
+                        circle(x, y, rad);
+                        circle(x2, y2, rad);
+                        circle(x3, y3, rad);
+                    } else {
+                        //let the balls move if the game is not paused
+                        x += dx;
+                        y += dy;
+                        x2 += dx2;
+                        y2 += dy2;
+                        x3 += dx3;
+                        y3 += dy3;
+                        ctx.fillStyle = "#0000ff"; //blue
+                        circle(x, y, rad);
+                        circle(x2, y2, rad);
+                        circle(x3, y3, rad);
+                    }
+                }
+                function checkHit() {
+                    //if the player hits a ball
+                    if ((y + rad) > player1Y && (y - rad) < (player1Y + player1H) //vertical 
+                            && (x + rad) > player1X && (x - rad) < (player1X + player1W)) { //horizontal
+
+                        end(); //end the game
+                    }
+                    if ((y2 + rad) > player1Y && (y2 - rad) < (player1Y + player1H) //vertical 
+                            && (x2 + rad) > player1X && (x2 - rad) < (player1X + player1W)) { //horizontal
+
+                        end();
+                    }
+                    if ((y3 + rad) > player1Y && (y3 - rad) < (player1Y + player1H) //vertical 
+                            && (x3 + rad) > player1X && (x3 - rad) < (player1X + player1W)) { //horizontal
+
+                        end();
+                    }
+                }
+                function end() {
+                    //set all the vaules to 0 so none of the balls or player moves when the game ends
+                    dy = 0;
+                    dy2 = 0;
+                    dx = 0;
+                    dx2 = 0;
+                    dx3 = 0;
+                    dy3 = 0;
+                    //set all the movement values for players to be false so you cant move the player
+                    p1Up = false;
+                    p1Down = false;
+                    p1Left = false;
+                    p1Right = false;
+
+
+                    gamePaused = true; //pause the game
+
+
+
+                }
+
+                function drawScore() {
+                    ctx.fillStyle = "#FFFFFF"; //white
+                    ctx.font = "30px Courier";
+                    ctx.fillText("Score: " + score, WIDTH / 2 - 100, 30);
+
+                }
+                function getScore() {
+                    //calculate the score
+                    score = Math.round((Date.now() - startTime) / 1000);
+                }
+
+                function draw() {
+
+                    clear();
+                    drawPlayer();
+                    updateBall();
+                    drawScore();
+
+                    if (gamePaused) {
+
+                        if (resetPressed) {
+
+                            //when you unpause the game
+                            gamePaused = false;
+                            startValues(); //reset the value for the player and ball
+                            startTime = Date.now(); //start timer when the game starts
+                        }
+                    } else {
+
+
+                        getScore();
+                        checkBallBounce();
+                        checkHit();
+                        moveplayer();
+
+
+                    }
+
+                    requestAnimationFrame(draw);
+                }
+                //
+
+                //give the canvas focus
+                document.getElementById('canvas').focus();
+
+                //call the init function when the page loads
+
+                window.addEventListener("load", init, false);
+                //call the key press functions when keys are pressed
+
+                window.addEventListener("keydown", onKeyDown, false);
+                window.addEventListener("keyup", onKeyUp, false);
+
+
+
+
+            </script>
+        </canvas>
+        <!--
+The title and rules are printed below the game screen
+        -->
+        <h2 align = "center">Welcome to Blue Balls 2.0 By: Fabio Sedki</h2>
+        <h4 align = "center">Rules:</h4>
+        <p align = "center"> The game is a dodge ball game, score is based off of time. Don't Touch any of the balls. Use the Arrow keys to move. Press space when ready to play or you need to restart.</p>
+
+
+    </body>
+</html>
+
